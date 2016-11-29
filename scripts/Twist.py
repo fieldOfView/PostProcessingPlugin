@@ -40,7 +40,7 @@ class Twist(Script):
         half_machine_width = global_container_stack.getProperty("machine_width", "value") / 2
         half_machine_depth = global_container_stack.getProperty("machine_depth", "value") / 2
 
-        move_pattern = re.compile("G[0-1]\s.*?X([0-9\.]*).*?Y([0-9\.]*)")
+        move_pattern = re.compile("(G[0-1]\s.*?)X([0-9\.]+)(.*?)Y([0-9\.]+)(.*)")
 
         layer_nr = -1
         angle = 0
@@ -56,6 +56,7 @@ class Twist(Script):
                         layers_started = True
                     else:
                         new_chunk += line + "\n"
+                        continue
 
                 if line.startswith(";LAYER:"):
                     layer_nr += 1
@@ -63,8 +64,8 @@ class Twist(Script):
 
                 result = move_pattern.match(line)
                 if result:
-                    x = float(result.group(1)) - half_machine_width
-                    y = float(result.group(2)) - half_machine_depth
+                    x = float(result.group(2)) - half_machine_width
+                    y = float(result.group(4)) - half_machine_depth
 
                     r = math.sqrt(x*x + y*y)
                     theta = math.atan2(y, x)
@@ -73,7 +74,7 @@ class Twist(Script):
                     x = r * math.cos(theta) + half_machine_width
                     y = r * math.sin(theta) + half_machine_depth
 
-                    line = line.replace("X" + result.group(1), "X" + str(x)).replace("Y" + result.group(2), "Y" + str(y))
+                    line = result.expand("\\1X%.3f\\3Y%.3f\\5" % (x, y))
 
                 new_chunk += line + "\n"
 

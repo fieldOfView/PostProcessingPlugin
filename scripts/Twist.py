@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Jaime van Kessel, Ultimaker B.V.
+# Copyright (c) 2016 Aldo Hoeben / fieldOfView
 # The PostProcessingPlugin is released under the terms of the AGPLv3 or higher.
 from ..Script import Script
 

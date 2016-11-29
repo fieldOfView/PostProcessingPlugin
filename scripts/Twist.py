@@ -42,25 +42,40 @@ class Twist(Script):
 
         move_pattern = re.compile("(G[0-1]\s.*?)X([0-9\.]+)(.*?)Y([0-9\.]+)(.*)")
 
+        layer_count = -1
         layer_nr = -1
         angle = 0
-        layers_started = False
+        process_lines = False
         amount_per_layer = math.pi * float(self.getSettingValueByKey("amount_per_layer")) / 180
         data_index = 0
         for chunk in data:
             new_chunk = ""
             lines = chunk.split("\n")
             for line in lines:
-                if not layers_started:
-                    if line.startswith(";LAYER:"):
-                        layers_started = True
+                if not process_lines:
+                    if line.startswith(";LAYER_COUNT:"):
+                        layer_count = int(line[13:])
+                    elif line.startswith(";LAYER:"):
+                        process_lines = True
+                        new_chunk += ";START_Twist\n"
                     else:
+                        # copy the input unprocessed and continue
                         new_chunk += line + "\n"
                         continue
 
                 if line.startswith(";LAYER:"):
-                    layer_nr += 1
+                    # start of a new layer
+                    layer_nr = int(line[7:])
                     angle = layer_nr * amount_per_layer
+
+                elif line.startswith(";TIME_ELAPSED:"):
+                    # end of a layer
+                    if layer_nr == layer_count - 1:
+                        # last layer processed; stop porcessing lines
+                        process_lines = False
+                        new_chunk += line + "\n"
+                        new_chunk += ";END_Twist\n"
+                        continue
 
                 result = move_pattern.match(line)
                 if result:
